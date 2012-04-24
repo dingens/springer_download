@@ -274,8 +274,9 @@ def _reporthook(numblocks, blocksize, filesize, url=None):
     except:
         percent = 100
     if numblocks != 0:
-        sys.stdout.write("\b"*70)
-    sys.stdout.write("%-66s%3d%%" % (url, percent))
+        sys.stdout.write("\r")
+    sys.stdout.write("%-66s %3d%%" % (url, percent))
+    sys.stdout.flush()
 
 def geturl(url, dst):
     downloader = SpringerURLopener()
