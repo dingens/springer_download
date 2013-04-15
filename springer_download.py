@@ -98,7 +98,7 @@ def main(argv):
             error("Could not access page: 403 Forbidden error.")
 
         if bookTitle == "":
-            match = re.search(r'<h1[^<]+class="title">(.+?)(?:<br/>\s*<span class="subtitle">(.+?)</span>\s*)?</h1>', page, re.S)
+            match = re.search(r'<h1[^<]+id="title">(.+?)</h1>(?:<h2 id="subtitle">(.+?)</h2>\s*)?', page, re.S)
             if not match or match.group(1).strip() == "":
                 error("Could not evaluate book title - bad link %s" % link)
             else:
@@ -139,20 +139,18 @@ def main(argv):
             #error("foo")
 
         # get chapters
-        for match in re.finditer('href="([^"]+\.pdf)"', page):
+        for match in re.finditer('href="(/content/pdf/[^"]+)"[^>]*>\s*Download PDF', page):
             chapterLink = match.group(1)
-            if chapterLink[:7] == "http://": # skip external links
-                continue
 
-            if re.search(r'front-matter.pdf', chapterLink):
+            if re.search(r'/bfm:', chapterLink):
                 if front_matter:
                     continue
                 else:
                     front_matter = True
-            if re.search(r'back-matter.pdf', chapterLink) and re.search(r'<a href="([^"#]+)"[^>]*>Next</a>', page):
-                continue
+                if re.search(r'/bbm:', chapterLink) and re.search(r'<a href="([^"#]+)"[^>]*>Next</a>', page):
+                    continue
             #skip backmatter if it is in list as second chapter - will be there at the end of the book also
-            if re.search(r'back-matter.pdf', chapterLink):
+            if re.search(r'/bbm:', chapterLink):
                 if len(chapters)<2:
                     continue
 
@@ -179,10 +177,8 @@ def main(argv):
 
     for chapterLink in chapters:
         if chapterLink[0] == "/":
-            chapterLink = "http://springerlink.com" + chapterLink
-        else:
-            chapterLink = baseLink + chapterLink
-        chapterLink = re.sub("/[^/]+/\.\.", "", chapterLink)
+            chapterLink = "http://link.springer.com" + chapterLink
+        print 'link:', chapterLink
         print "downloading chapter %d/%d" % (i, len(chapters))
         localFile, mimeType = geturl(chapterLink, "%d.pdf" % i)
 
